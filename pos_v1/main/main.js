@@ -1,54 +1,27 @@
 'use strict';
 
-function buildCartItems(barcodes) {
+function buildCartItems(tags) {
   let cartItems = [];
+  let items = loadAllItems();
 
-  barcodes.forEach(function (barcode) {
-    let barcodeArray = barcode.split("-");
+  for (let tag of tags) {
+    let barcodeArray = tag.split("-");
+    let barcode = barcodeArray[0];
+    let count = parseFloat(barcodeArray[1] || 1);
 
-    if(barcodeArray.length > 1){
-      for(let i=0; i<parseInt(barcodeArray[1]); i++){
-        barcodes.splice(barcodes.indexOf(barcode),0,barcodeArray[0]);
-      }
-      barcodes.splice(barcodes.indexOf(barcode),1);
-    }
-  });
+    let cartItem = cartItems.find((cartItem) => {
+      return cartItem.item.barcode == barcode
+    });
 
-  barcodes.forEach(function (barcode) {
-    let existedItem = findItem(barcode);
-    let existedCartItem = findExistCartItem(existedItem,cartItems);
-
-    if (existedCartItem) {
-      existedCartItem.count++;
+    if (cartItem) {
+      cartItem.count++;
     } else {
-      cartItems.push({item: existedItem, count: 1})
+      let item = items.find((item) => {
+        return item.barcode == barcode;
+      });
+      cartItems.push({item: item, count: count});
     }
-  });
+  }
 
   return cartItems;
-}
-
-function findExistCartItem(existedItem,cartItems) {
-  let existedCartItem = false;
-
-  cartItems.forEach(function (cartItem) {
-    if(cartItem.item.barcode === existedItem.barcode){
-      existedCartItem = cartItem;
-    }
-  });
-
-  return existedCartItem;
-}
-
-function findItem(barcode) {
-  let existedItem;
-  const items = loadAllItems();
-
-  items.forEach(function (item) {
-    if(item.barcode === barcode){
-      existedItem = item;
-    }
-  });
-
-  return existedItem;
 }
