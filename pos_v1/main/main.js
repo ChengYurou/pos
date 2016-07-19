@@ -26,23 +26,20 @@ function buildCartItems(tags) {
 }
 
 function buildReceiptItems(promotions, cartItems) {
-
   return cartItems.map((cartItem) => {
-    let promotion = promotions.find((promotion) => {
-      return promotion.type === 'BUY_TWO_GET_ONE_FREE';
+    let promotion = promotions.find((promotion) =>{
+      return promotion.type = 'BUY_TWO_GET_ONE_FREE';
     });
 
-    let promotionBarcode = promotion.barcodes.some((barcode) => {
-      return barcode === cartItem.item.barcode;
-    });
-    let subtotal = parseFloat(cartItem.item.price * cartItem.count);
+    let isExistedBarcode = promotion.barcodes.some(barcode => barcode===cartItem.item.barcode);
+    let subtotal = parseFloat(cartItem.count*cartItem.item.price);
     let save = 0;
 
-    if (promotionBarcode) {
-      save = parseInt(cartItem.count / 3) * cartItem.item.price;
-      subtotal = subtotal - save;
+    if(isExistedBarcode){
+      save = parseFloat(parseInt(cartItem.count/3)*cartItem.item.price);
+      subtotal -= save;
     }
 
-    return {cartItem: cartItem, subtotal: subtotal, save: save};
+    return {cartItem:cartItem, subtotal:subtotal, save:save};
   });
 }
