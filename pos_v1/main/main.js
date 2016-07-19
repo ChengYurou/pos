@@ -26,20 +26,29 @@ function buildCartItems(tags) {
 }
 
 function buildReceiptItems(promotions, cartItems) {
-  return cartItems.map((cartItem) => {
-    let promotion = promotions.find((promotion) =>{
-      return promotion.type = 'BUY_TWO_GET_ONE_FREE';
-    });
+  return cartItems.map(cartItem => {
+    let promotionType = getpromotionType(cartItem.item.barcode, promotions);
+    let {subtotal,save} = discount(cartItem,promotionType);
 
-    let isExistedBarcode = promotion.barcodes.some(barcode => barcode===cartItem.item.barcode);
-    let subtotal = parseFloat(cartItem.count*cartItem.item.price);
-    let save = 0;
-
-    if(isExistedBarcode){
-      save = parseFloat(parseInt(cartItem.count/3)*cartItem.item.price);
-      subtotal -= save;
-    }
-
-    return {cartItem:cartItem, subtotal:subtotal, save:save};
+    return {cartItem, subtotal, save};
   });
+}
+
+function discount(cartItem,promotionType) {
+  let freeCount = 0;
+  if(promotionType === 'BUY_TWO_GET_ONE_FREE'){
+    freeCount = parseInt(cartItem.count/3);
+  }
+  let subtotal = (cartItem.count-freeCount)*cartItem.item.price;
+  let save = freeCount*cartItem.item.price;
+  
+  return {subtotal, save};
+}
+
+function getpromotionType(barcode, promotions) {
+  let promotion = promotions.find(promotion => {
+    return promotion.barcodes.includes(barcode);
+  });
+
+  return promotion?promotion.type:"";
 }
