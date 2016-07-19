@@ -1,12 +1,21 @@
 "use strict";
 
-function printReceipt(receipt) {
-  let cartItemText = getCartItemText(receipt.receiptItems);
-  let receiptText = getReceiptText(receipt);
-  let text = "***<没钱赚商店>收据***" + cartItemText
-    + "\n----------------------" + receiptText + "\n**********************";
+function printReceipt(inputs) {
+  const promotions = loadPromotions();
+  let cartItems = buildCartItems(inputs);
+  let receiptItems = buildReceiptItems(promotions,cartItems);
+  let receipt = buildReceipt(receiptItems);
+  let text = getText(receipt);
 
   console.log(text);
+}
+
+function getText(receipt) {
+  let cartItemText = getCartItemText(receipt.receiptItems);
+  let receiptText = getReceiptText(receipt);
+
+  return "***<没钱赚商店>收据***" + cartItemText
+    + "\n----------------------" + receiptText + "\n**********************";
 }
 
 function getReceiptText(receipt) {
