@@ -116,4 +116,52 @@ describe('pos', () => {
 
     expect(receiptItems).toEqual(expectReceiptItems);
   });
+  
+  it('should return object named receipt', ()=> {
+    let  receiptItems = buildReceiptItems(loadPromotions(), buildCartItems(inputs));
+    let receipt = buildReceipt(receiptItems);
+    const expectReceipt = {
+      receiptItems:[
+      { cartItem: {
+        item: {
+          barcode: 'ITEM000001',
+          name: '雪碧',
+          unit: '瓶',
+          price: 3.00
+        },
+        count: 5
+      },
+        subtotal: 12,
+        save: 3
+      },
+      { cartItem: {
+        item: {
+          barcode: 'ITEM000003',
+          name: '荔枝',
+          unit: '斤',
+          price: 15.00
+        },
+        count: 2
+      },
+        subtotal: 30,
+        save: 0
+      },
+      { cartItem: {
+        item: {
+          barcode: 'ITEM000005',
+          name: '方便面',
+          unit: '袋',
+          price: 4.50
+        },
+        count: 3
+      },
+        subtotal: 9,
+        save: 4.5
+      }],
+      total:51,
+      summarySave:7.5
+    };
+    
+    expect(receipt).toEqual(expectReceipt);
+  });
 });
