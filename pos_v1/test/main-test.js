@@ -36,8 +36,8 @@ describe('pos', () => {
   });
 
   it('should return object named catItems', () => {
-
-    let cartItems = buildCartItems(inputs);
+    let items = loadAllItems();
+    let cartItems = buildCartItems(items, inputs);
     const expectCartItems = [
       {
         item: {
@@ -72,9 +72,8 @@ describe('pos', () => {
   });
 
   it('should return object named receiptItems', () => {
-    const promotions = loadPromotions();
-    let cartItems = buildCartItems(inputs);
-    let receiptItems = buildReceiptItems(promotions, cartItems);
+    let cartItems = buildCartItems(loadAllItems(),inputs);
+    let receiptItems = buildReceiptItems(loadPromotions(), cartItems);
 
     const expectReceiptItems = [
       { cartItem: {
@@ -118,7 +117,7 @@ describe('pos', () => {
   });
 
   it('should return object named receipt', ()=> {
-    let  receiptItems = buildReceiptItems(loadPromotions(), buildCartItems(inputs));
+    let  receiptItems = buildReceiptItems(loadPromotions(), buildCartItems(loadAllItems(),inputs));
     let receipt = buildReceipt(receiptItems);
     const expectReceipt = {
       receiptItems:[
@@ -159,7 +158,7 @@ describe('pos', () => {
         save: 4.5
       }],
       total:51,
-      summarySave:7.5
+      saveTotal:7.5
     };
 
     expect(receipt).toEqual(expectReceipt);
@@ -205,7 +204,7 @@ describe('pos', () => {
           save: 4.5
         }],
       total:51,
-      summarySave:7.5
+      saveTotal:7.5
     };
     let text = getText(receipt);
 

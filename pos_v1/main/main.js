@@ -1,44 +1,81 @@
 "use strict";
 
-function printReceipt(inputs) {
-  const promotions = loadPromotions();
-  let cartItems = buildCartItems(inputs);
-  let receiptItems = buildReceiptItems(promotions, cartItems);
-  let receipt = buildReceipt(receiptItems);
-  let text = getText(receipt);
+function printReceipt(tags) {
+  const items = loadAllItems();
+  const cartItems = buildCartItems(items,tags);
 
-  console.log(text);
+  const promotions = loadPromotions();
+  const receiptItems = buildReceiptItems(promotions, cartItems);
+
+  const receipt = buildReceipt(receiptItems);
+
+  console.log(getText(receipt));
 }
 
 function getText(receipt) {
-  let cartItemText = getCartItemText(receipt.receiptItems);
-  let receiptText = getReceiptText(receipt);
+  const cartItemText =receipt.receiptItems.map(receiptItem => {
+    const cartItem = receiptItem.cartItem;
 
-  return "***<没钱赚商店>收据***" + cartItemText
-    + "\n----------------------" + receiptText + "\n**********************";
+    return `名称：${cartItem.item.name}，\
+数量：${cartItem.count}${cartItem.item.unit}，\
+单价：${formatMoney(cartItem.item.price)}(元)，\
+小计：${formatMoney(receiptItem.subtotal)}(元)`;
+  }).join('\n');
+
+  return `***<没钱赚商店>收据***
+${cartItemText}
+----------------------
+总计：${formatMoney(receipt.total)}(元)
+节省：${formatMoney(receipt.saveTotal)}(元)
+**********************`;
 }
 
-function getReceiptText(receipt) {
-
-  return '\n总计：' + receipt.total.toFixed(2)
-    + '(元)\n节省：' + receipt.summarySave.toFixed(2) + '(元)';
+function formatMoney(money) {
+  return money.toFixed(2);
 }
 
-function getCartItemText(receiptItems) {
-  
-  return receiptItems.map(receiptItem => {
-    let cartItem = receiptItem.cartItem;
+function buildReceipt(receiptItems) {
+  let total = 0;
+  let saveTotal = 0;
+  for (let receiptItem of receiptItems) {  //可使用reduce
+    total += receiptItem.subtotal;
+    saveTotal += receiptItem.save;
+  }
 
-    return '\n名称：' + cartItem.item.name
-      + '，数量：' + cartItem.count + cartItem.item.unit
-      + '，单价：' + cartItem.item.price.toFixed(2)
-      + '(元)，小计：' + receiptItem.subtotal.toFixed(2) + '(元)';
-  }).join('');
+  return {receiptItems, total, saveTotal}
 }
 
-function buildCartItems(tags) {
+function buildReceiptItems(promotions, cartItems) {
+  return cartItems.map(cartItem => {
+    let promotionType = getPromotionType(promotions, cartItem.item.barcode);
+    let {subtotal, save} = discount(promotionType, cartItem.count, cartItem.item.price);
+
+    return {cartItem, subtotal, save};
+  });
+}
+
+function discount(promotionType, count, price) {
+  let subtotal = count*price;
+  let save = 0;
+
+  if(promotionType === 'BUY_TWO_GET_ONE_FREE') {
+    save = parseInt(count/3)*price;
+  }
+  subtotal -= save;
+
+  return {subtotal, save};
+}
+
+function getPromotionType(promotions, barcode) {
+  let promotion = promotions.find(promotion => {
+    return promotion.barcodes.some(b => b === barcode);
+  });
+
+  return promotion ? promotion.type : undefined;
+}
+
+function buildCartItems(items,tags) {
   let cartItems = [];
-  let items = loadAllItems();
 
   for (let tag of tags) {
     let barcodeArray = tag.split('-');
@@ -48,7 +85,7 @@ function buildCartItems(tags) {
     let cartItem = cartItems.find(cartItem => cartItem.item.barcode === barcode);
 
     if (cartItem) {
-      cartItem.count++;
+      cartItem.count += count;
     } else {
       let item = items.find(item => item.barcode === barcode);
       cartItems.push({item, count});
@@ -57,44 +94,8 @@ function buildCartItems(tags) {
   return cartItems;
 }
 
-function buildReceipt(receiptItems) {
-  let total = 0;
-  let summarySave = 0;
-  for (let receiptItem of receiptItems) {
-    total += receiptItem.subtotal;
-    summarySave += receiptItem.save;
-  }
 
-  return {receiptItems, total, summarySave}
-}
 
-function buildReceiptItems(promotions, cartItems) {
-  return cartItems.map(cartItem => {
-    let promotionType = getPpromotionType(promotions, cartItem.item.barcode);
-    let {subtotal, save} = discount(promotionType, cartItem);
 
-    return {cartItem, subtotal, save};
-  });
-}
 
-function discount(promotionType, cartItem) {
-  let freeCount = 0;
-
-  if (promotionType === 'BUY_TWO_GET_ONE_FREE') {
-    freeCount = parseInt(cartItem.count / 3);
-  }
-
-  let subtotal = (cartItem.count - freeCount) * cartItem.item.price;
-  let save = freeCount * cartItem.item.price;
-
-  return {subtotal, save}
-}
-
-function getPpromotionType(promotions, barcode) {
-  let promotion = promotions.find(promotion => {
-    return promotion.barcodes.includes(barcode);
-  });
-
-  return promotion ? promotion.type : '';
-}
 
