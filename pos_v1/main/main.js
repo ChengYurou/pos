@@ -3,7 +3,7 @@
 function printReceipt(inputs) {
   const promotions = loadPromotions();
   let cartItems = buildCartItems(inputs);
-  let receiptItems = buildReceiptItems(promotions,cartItems);
+  let receiptItems = buildReceiptItems(promotions, cartItems);
   let receipt = buildReceipt(receiptItems);
   let text = getText(receipt);
 
@@ -25,17 +25,15 @@ function getReceiptText(receipt) {
 }
 
 function getCartItemText(receiptItems) {
-  let cartItemText = "";
-
-  for (let receiptItem of receiptItems) {
+  
+  return receiptItems.map(receiptItem => {
     let cartItem = receiptItem.cartItem;
-    cartItemText += '\n名称：' + cartItem.item.name
+
+    return '\n名称：' + cartItem.item.name
       + '，数量：' + cartItem.count + cartItem.item.unit
       + '，单价：' + cartItem.item.price.toFixed(2)
       + '(元)，小计：' + receiptItem.subtotal.toFixed(2) + '(元)';
-  }
-
-  return cartItemText;
+  }).join('');
 }
 
 function buildCartItems(tags) {
@@ -59,34 +57,6 @@ function buildCartItems(tags) {
   return cartItems;
 }
 
-function buildReceiptItems(promotions, cartItems) {
-  return cartItems.map(cartItem => {
-    let promotionType = getPromotionType(cartItem.item.barcode, promotions);
-    let {subtotal, save} = discount(cartItem, promotionType);
-
-    return {cartItem, subtotal, save};
-  });
-}
-
-function discount(cartItem, promotionType) {
-  let freeCount = 0;
-  if (promotionType === 'BUY_TWO_GET_ONE_FREE') {
-    freeCount = parseInt(cartItem.count / 3);
-  }
-
-  let subtotal = (cartItem.count - freeCount) * cartItem.item.price;
-  let save = freeCount * cartItem.item.price;
-
-  return {subtotal, save};
-}
-
-function getPromotionType(barcode, promotions) {
-  let promotion = promotions.find(promotion => {
-    return promotion.barcodes.includes(barcode);
-  });
-  return promotion ? promotion.type : '';
-}
-
 function buildReceipt(receiptItems) {
   let total = 0;
   let summarySave = 0;
@@ -96,5 +66,35 @@ function buildReceipt(receiptItems) {
   }
 
   return {receiptItems, total, summarySave}
+}
+
+function buildReceiptItems(promotions, cartItems) {
+  return cartItems.map(cartItem => {
+    let promotionType = getPpromotionType(promotions, cartItem.item.barcode);
+    let {subtotal, save} = discount(promotionType, cartItem);
+
+    return {cartItem, subtotal, save};
+  });
+}
+
+function discount(promotionType, cartItem) {
+  let freeCount = 0;
+
+  if (promotionType === 'BUY_TWO_GET_ONE_FREE') {
+    freeCount = parseInt(cartItem.count / 3);
+  }
+
+  let subtotal = (cartItem.count - freeCount) * cartItem.item.price;
+  let save = freeCount * cartItem.item.price;
+
+  return {subtotal, save}
+}
+
+function getPpromotionType(promotions, barcode) {
+  let promotion = promotions.find(promotion => {
+    return promotion.barcodes.includes(barcode);
+  });
+
+  return promotion ? promotion.type : '';
 }
 
